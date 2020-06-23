@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 import invariant from 'invariant';
 import shortid from 'shortid';
-import { BatchConfig, MessengerBatchQueue } from 'messenger-batch';
+import { BatchConfig, FacebookBatchQueue } from 'facebook-batch';
 import { JsonObject } from 'type-fest';
 import { MessengerClient } from 'messaging-api-messenger';
 
@@ -47,7 +47,7 @@ export default class FacebookBaseConnector<
 
   _batchConfig: BatchConfig | null = null;
 
-  _batchQueue: MessengerBatchQueue | null = null;
+  _batchQueue: FacebookBatchQueue | null = null;
 
   constructor(options: FacebookBaseConnectorOptions<Client>) {
     const {
@@ -88,7 +88,7 @@ export default class FacebookBaseConnector<
 
     this._batchConfig = batchConfig || null;
     if (this._batchConfig) {
-      this._batchQueue = new MessengerBatchQueue(
+      this._batchQueue = new FacebookBatchQueue(
         this._client,
         this._batchConfig
       );

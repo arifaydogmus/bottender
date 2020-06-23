@@ -4,9 +4,9 @@ import { EventEmitter } from 'events';
 import invariant from 'invariant';
 import sleep from 'delay';
 import warning from 'warning';
+import { FacebookBatchQueue } from 'facebook-batch';
 import { JsonObject } from 'type-fest';
 import { MessengerBatch, MessengerClient } from 'messaging-api-messenger';
-import { MessengerBatchQueue } from 'messenger-batch';
 
 import Context from '../context/Context';
 import Session from '../session/Session';
@@ -23,7 +23,7 @@ export type MessengerContextOptions = {
   initialState?: JsonObject;
   requestContext?: RequestContext;
   customAccessToken?: string;
-  batchQueue?: MessengerBatchQueue | null;
+  batchQueue?: FacebookBatchQueue | null;
   emitter?: EventEmitter;
 };
 
@@ -34,7 +34,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
 
   _personaId: string | null = null;
 
-  _batchQueue: MessengerBatchQueue | null;
+  _batchQueue: FacebookBatchQueue | null;
 
   constructor({
     appId,
@@ -164,7 +164,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendText(
           this._session.user.id,
           text,
@@ -191,7 +191,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.User>(
         MessengerBatch.getUserProfile(
           this._session.user.id,
           this._getMethodOptions(options)
@@ -226,7 +226,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendSenderActionResponse>(
         MessengerBatch.sendSenderAction(
           this._session.user.id,
           senderAction,
@@ -256,7 +256,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendSenderActionResponse>(
         MessengerBatch.typingOn(
           this._session.user.id,
           this._getSenderActionMethodOptions(options)
@@ -284,7 +284,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendSenderActionResponse>(
         MessengerBatch.typingOff(
           this._session.user.id,
           this._getSenderActionMethodOptions(options)
@@ -312,7 +312,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendSenderActionResponse>(
         MessengerBatch.markSeen(
           this._session.user.id,
           this._getSenderActionMethodOptions(options)
@@ -347,7 +347,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<{ success: true }>(
         MessengerBatch.passThreadControl(
           this._session.user.id,
           targetAppId,
@@ -379,7 +379,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<{ success: true }>(
         MessengerBatch.passThreadControlToPageInbox(
           this._session.user.id,
           metadata,
@@ -409,7 +409,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<{ success: true }>(
         MessengerBatch.takeThreadControl(
           this._session.user.id,
           metadata,
@@ -439,7 +439,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<{ success: true }>(
         MessengerBatch.requestThreadControl(
           this._session.user.id,
           metadata,
@@ -467,7 +467,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<{ appId: string }>(
         MessengerBatch.getThreadOwner(
           this._session.user.id,
           this._getMethodOptions({})
@@ -517,7 +517,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<{ success: true }>(
         MessengerBatch.associateLabel(
           this._session.user.id,
           labelId,
@@ -547,7 +547,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<{ success: true }>(
         MessengerBatch.dissociateLabel(
           this._session.user.id,
           labelId,
@@ -589,7 +589,18 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<{
+        data: {
+          name: string;
+          id: string;
+        }[];
+        paging: {
+          cursors: {
+            before: string;
+            after: string;
+          };
+        };
+      }>(
         MessengerBatch.getAssociatedLabels(
           this._session.user.id,
           this._getMethodOptions({})
@@ -623,7 +634,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendMessage(
           this._session.user.id,
           message,
@@ -659,7 +670,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendAttachment(
           this._session.user.id,
           attachment,
@@ -702,7 +713,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
       !Buffer.isBuffer(image) &&
       !(image instanceof fs.ReadStream)
     ) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendImage(
           this._session.user.id,
           image,
@@ -745,7 +756,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
       !Buffer.isBuffer(audio) &&
       !(audio instanceof fs.ReadStream)
     ) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendAudio(
           this._session.user.id,
           audio,
@@ -788,7 +799,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
       !Buffer.isBuffer(video) &&
       !(video instanceof fs.ReadStream)
     ) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendVideo(
           this._session.user.id,
           video,
@@ -831,7 +842,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
       !Buffer.isBuffer(file) &&
       !(file instanceof fs.ReadStream)
     ) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendFile(
           this._session.user.id,
           file,
@@ -867,7 +878,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendTemplate(
           this._session.user.id,
           payload,
@@ -905,7 +916,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendGenericTemplate(
           this._session.user.id,
           elements,
@@ -942,7 +953,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendButtonTemplate(
           this._session.user.id,
           text,
@@ -980,7 +991,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendMediaTemplate(
           this._session.user.id,
           elements,
@@ -1016,7 +1027,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendReceiptTemplate(
           this._session.user.id,
           attrs,
@@ -1052,7 +1063,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendAirlineBoardingPassTemplate(
           this._session.user.id,
           attrs,
@@ -1088,7 +1099,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendAirlineCheckinTemplate(
           this._session.user.id,
           attrs,
@@ -1124,7 +1135,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendAirlineItineraryTemplate(
           this._session.user.id,
           attrs,
@@ -1160,7 +1171,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendAirlineUpdateTemplate(
           this._session.user.id,
           attrs,
@@ -1196,7 +1207,7 @@ class MessengerContext extends Context<MessengerClient, MessengerEvent> {
     }
 
     if (this._batchQueue) {
-      return this._batchQueue.push(
+      return this._batchQueue.push<MessengerTypes.SendMessageSuccessResponse>(
         MessengerBatch.sendOneTimeNotifReqTemplate(
           this._session.user.id,
           attrs,
